@@ -7,8 +7,17 @@ dotenv.config({path:'./env'}) // for this update dev in scripts in package.json
 // import express from "express"
 // const app=express();
 import connectDB from "./db/index.js"
-connectDB()
 
+// connectDB is async so it return promise so then catch
+connectDB()
+.then(()=>{
+    app.listen(process.env.PORT || 800,()=>{
+        console.log(`Server at ${process.env.PORT}`)
+    })
+})
+.catch((err)=>{
+    console.log("connected")
+})
 // using efi-> immediately run, ; is used so that if in last line before that function if it is not used then no error
 // approach 1st to connect db
 /*
