@@ -6,12 +6,13 @@ dotenv.config({path:'./env'}) // for this update dev in scripts in package.json
 
 // import express from "express"
 // const app=express();
+import {app} from "./app.js" 
 import connectDB from "./db/index.js"
  
 // connectDB is async so it return promise so then catch
 connectDB()
 .then(()=>{
-    app.listen(process.env.PORT || 800,()=>{
+    app.listen(process.env.PORT || 8000,()=>{
         console.log(`Server at ${process.env.PORT}`)
     }) 
 })
