@@ -76,7 +76,7 @@ userSchema.methods.generateAccessToken = function (){
         email:this.email,
         username:this.username,
         fullname:this.fullname
-            },//this is payload
+            },//this is payload. this data is stored in form of tokens
         process.env.ACCESS_TOKEN_SECRET,
         {
             expiresIn:process.env.ACCESS_TOKEN_EXPIRY
