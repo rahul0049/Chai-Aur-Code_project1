@@ -26,4 +26,17 @@ variours req can be called -> two most important are req.params(for url) and req
 from cookies
 */
 
+
+
+
+//routes
+import userRouter from "./routes/user.routes.js"
+
+//routes declaration
+//app.get() only when we are not using Router.
+// here app.use middleware is used
+app.use("/api/v1/users",userRouter) //activate userRouter i.e. if anyone write users the control goes to userRouter
+//api / version1 then users then which route 
+
+
 export { app }
