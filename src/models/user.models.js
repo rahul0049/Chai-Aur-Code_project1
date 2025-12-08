@@ -8,7 +8,7 @@ import bcrypt from "bcrypt" // for encryption of password
 const userSchema = new Schema({
     username:{
         type:String,
-        reaquired:true,
+        required:true,
         unique:true,
         lowercase:true,
         trim:true,
@@ -16,15 +16,15 @@ const userSchema = new Schema({
     },
     email:{
         type:String,
-        reaquired:true,
+        required:true,
         unique:true,
         lowercase:true,
         trim:true,
          
     },
-    fullname:{
+    fullName:{
         type:String,
-        reaquired:true,
+        required:true,
         trim:true,
         index:true,
     },
@@ -46,7 +46,7 @@ const userSchema = new Schema({
     ],
     password:{
         type:String,
-        reqruired:[true,'password is required']
+        required:[true,'password is required']
     },
     refreshToken:{
         type:String,
@@ -57,12 +57,11 @@ const userSchema = new Schema({
 
 
 
-userSchema.pre("save",async function (next){
-    if(!this.isModified("password")) return next();
-    this.password = await bcrypt.hash(this.password,10);
-     next() // it creates a problem because if user change avatar then it is called and it changes password so use if condition
+userSchema.pre("save", async function (){
+    if (!this.isModified("password")) return; // nothing to do
+    this.password = await bcrypt.hash(this.password, 10);
 
-}) //types are save,update,remove,validate,deleteOne,updateOne,init
+}) // types are save,update,remove,validate,deleteOne,updateOne,init
 //arrow function is not used here because they don't have context (this)
 
 userSchema.methods.isPasswordCorrect=async function(password){

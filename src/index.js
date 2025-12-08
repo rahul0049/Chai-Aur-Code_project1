@@ -2,7 +2,7 @@ import mongoose from "mongoose"
 import {DB_NAME} from "./constants.js"
 import dotenv from "dotenv"
 // require("dotevn").config() // it is used so that as soon as application the env variables available everywhere (each file )
-dotenv.config({path:'./env'}) // for this update dev in scripts in package.json
+dotenv.config({path:'./.env'}) // for this update dev in scripts in package.json
 
 // import express from "express"
 // const app=express();
@@ -11,11 +11,11 @@ import connectDB from "./db/index.js"
  
 // connectDB is async so it return promise so then catch
 connectDB()
-.then(()=>{
+.then(()=>{ 
     app.listen(process.env.PORT || 8000,()=>{
         console.log(`Server at ${process.env.PORT}`)
     }) 
-})
+}) 
 .catch((err)=>{
     console.log("connected")
 })

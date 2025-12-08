@@ -32,7 +32,7 @@ const registerUser=asyncHandler(async (req,res)=>{
 
 
     // now check if user exist or not . For this import user. Use {user} because export default is not used in user
-    const existedUser=User.findOne({
+    const existedUser= await User.findOne({
         $or:[{email},{username}]
     })
     if(existedUser) throw new APIerror(409,"username is already exist")
@@ -41,9 +41,15 @@ const registerUser=asyncHandler(async (req,res)=>{
     //we get req.data in body
     // middleware multer gives req.files
    const avatarLocalPath = req.files?.avatar[0]?.path //if files exist then in avatar take first property as it gives object
-    console.log(req.files)
+
     //similarly take for cover image
-    const coverImageLocalPath = req.files?.coverImage[0]?.path 
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path 
+    let coverImageLocalPath;
+    if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length>0){
+        coverImageLocalPath=req.files.coverImage[0].path;
+    }
+
+
 
     //avatar is compulsory
     if(!avatarLocalPath){
