@@ -4,6 +4,22 @@ import {User} from "../models/user.models.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js" // {} is used because defalut export is not used
 import { APIresponse } from "../utils/APIresponse.js"
 
+
+const generateAccessAndRefreshTokens = async(userId)=>{
+    try {
+        const user = await User.findById(userId);
+        const accessToken = user.generateAccessToken();
+        const refreshToken = user.generateRefreshToken();
+        //store refresh token in DB
+        user.refreshToken = refreshToken;
+        await user.save({validateBeforeSave:false}) // in Mongoose, don't validation 
+        return {accessToken,refreshToken};
+    } catch (error) {
+        throw new APIerror(500,"something went wrong while generating the refresh and access Token")
+    }
+}
+
+
 const registerUser=asyncHandler(async (req,res)=>{
     //get user details from frontend / postman according to models
     //validation(check correct format of names, email,etc)-> not empty ?
@@ -16,7 +32,7 @@ const registerUser=asyncHandler(async (req,res)=>{
     //if created return response or else throw error
  
     const {fullName,email,username,password}=req.body
-    console.log(email)
+    // console.log(email)
 
     //now perform validation 
     // if(fullName===""){
@@ -91,4 +107,89 @@ const registerUser=asyncHandler(async (req,res)=>{
     )
 
 })
-export {registerUser}
+
+
+
+const loginUser=asyncHandler(async (req,res)=>{
+    // todos for login->
+    /* get user details from req.body 
+    username or email
+    find the user
+    password check 
+    if correct password then generate access and refreshToken and give to user
+    send in cookies 
+    send response that user logged in 
+    */
+   const {email,username,password}=req.body
+   //now we want atleast one of email or username
+   if(!username || !email) {throw new APIerror(400,"username or email is required");}
+   //now check for username or email in db
+  const user = await User.findOne({
+    $or:[{email},{username}] // we can pass object in array. here $or is methods of mongoose
+   })
+   if(!user) throw new APIerror(404,"user does not exist");
+
+   //now check for password. we need to check for user not User (because User method is of mongoose)
+   const isPasswordValid = await user.isPasswordCorrect(password);
+   if(!isPasswordValid) { throw new APIerror(404,"Invalid user credentials")}
+
+   //now access and refresh token it is very common so use it as method
+   const {accessToken,refreshToken} = await generateAccessAndRefreshTokens(user._id);
+
+   //may be user is empty
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken"); // password and refreshToken is not added here 
+
+    //now send them in cookies
+    const options = {
+        httpOnly:true,
+        secure:true,  // now these cookies can only be modified by server only 
+    }
+    return res
+    .status(200)
+    .cookie("accessToken",accessToken,options)
+    .cookie("refreshToken",refreshToken,options)
+    .json(
+        new APIresponse(
+            200,
+            {
+                user:loggedInUser,accessToken,refreshToken
+            }, // this is data from APIresponse.js
+            "user logged in Successfully"
+        )
+    ) // json is used when user want access and refreshToken 
+ })
+
+
+
+ //logout user
+ const logoutUser = asyncHandler(async (req,res)=>{
+    //clear it's cookies
+    //reset it's refreshToken
+    //we want username 
+    //so middleware is used to get it 
+    //now we have access to user
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set:{
+                refreshToken:undefined
+            }// this set is method of mongoose 
+        },{
+            new:true
+        }
+    )
+    //now clear cookies
+    const options={
+        httpOnly:true,
+        secure:true
+    }
+    return res
+    .status(200)
+    .clearCookie("accessToken",options)
+    .clearCookie("refreshToken",options)
+    .json(new APIresponse(200,{},"User logged out"));
+ })
+
+
+
+export {registerUser,loginUser,logoutUser}

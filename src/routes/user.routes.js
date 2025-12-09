@@ -1,7 +1,9 @@
 import { Router } from "express";
-import { registerUser } from "../controllers/user.controller.js";
+import { logoutUser, registerUser } from "../controllers/user.controller.js";
 import {upload} from "../middlewares/multer.middleware.js"
 const router=Router()
+import { loginUser } from "../controllers/user.controller.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 router.route("/register").post(
     upload.fields([
@@ -10,5 +12,12 @@ router.route("/register").post(
     ]), // middleware is used for fs, just before method is executed
     registerUser)
 //now url become http://localhost:8000/users/register
+
+
+router.route("/login").post(loginUser)
+
+//secured routes
+router.route("/logout").post(verifyJWT,logoutUser)//here verifyJWT is a middleware and next() in middleware told to go to logoutUser
+
 
 export default router
