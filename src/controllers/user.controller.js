@@ -3,6 +3,7 @@ import {APIerror} from "../utils/APIerror.js"
 import {User} from "../models/user.models.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js" // {} is used because defalut export is not used
 import { APIresponse } from "../utils/APIresponse.js"
+import mongoose from "mongoose"
 
 const generateAccessAndRefreshTokens = async(userId)=>{
     try {
@@ -229,7 +230,7 @@ const changeCurrentPassword = asyncHandler(async (req,res)=>{
 })
 
 const getCurrentUser = asyncHandler(async (req,res)=>{
-    return res.status(200).json(200,req.user,"current user fetched successfully")
+    return res.status(200).json(new APIresponse(200,req.user,"current user fetched successfully"))
 })
 
 const updateAccountDetails = asyncHandler(async (req,res)=>{
@@ -281,6 +282,129 @@ const updateUserCoverImage = asyncHandler( async (req,res)=>{
 })
 
 
+const getUserChannelProfile = asyncHandler(async (req,res)=>{
+    const username = req.params // where params is from url
+    if(!username?.trim()) {
+        throw new APIerror(400,"username is missing ")
+    }
+    // if we reached here then username exist because apierror is not thrown
+    // User.find({username}) // this is one way. other way is match
+   const channel =  await User.aggregate([ // it gives an array with {} are pipelines
+        {
+            $match:{
+                username:username?.toLowerCase()
+            }  
+        },
+        {
+            $lookup:{ //used to join two documents
+                from:"subscriptions",  // because in models all fields convert into lowecase and plural.. from means from where i need to join the document(which document to join)
+                localField:"_id",//the name is our own document
+                foreignField:"channel", // name is subscriptions document
+                as:"subscribers" // now we get array of subscribers
+            }
+        },
+        //in the next pipelines we find the numbers of channels that I subscribe 
+        {
+             $lookup:{
+                from:"subscriptions",  // because in models all fields convert into lowecase and plural
+                localField:"_id",
+                foreignField:"subscriber",
+                as:"subscribedTo"  // the channels that i subscribed
+            }// here we get all documents of subscriberTo now add it's size to the user 
+        },
+        //now we add additional fields
+        {
+            $addFields:{ // it add new fields like in classroom we have first name and last name . we add both and it give fullName . Now fullName is not in db we get by $addFields
+                subscribersCount:{ // now new fields subscribersCount in added
+                    // count the subscribers field
+                    $size:"$subscribers"
+                },
+                channelsSubscribedToCount:{
+                    $size:"$subscribedTo" // it gives the size of subscribedTo
+                },
+                isSubscribed:{
+                    $cond:{//we want to see when I'm present in subscribers document
+                        if:{ $in:[req.user?._id,"$subscribers.subscriber"] } ,// in check whether id present in subscribers or not 
+                        // check user id (because we are logged in ) 
+                        then:true,
+                        else:false
+                    }
+                }
+            }
+        },{ // suppose we want to give selected values then user project and keep the name flag as 1
+            $project:{
+                fullName:1,
+                username:1,
+                channelsSubscribedToCount:1,
+                avatar:1,
+                coverImage:1,
+                isSubscribed:1,
+                email:1
+            }
+        }
+    ])  
+    if(!channel?.length){
+        throw new APIerror(404,"channel does not exist")
+    }
+    return res.status(200)
+    .json(
+        new APIresponse(200,channel[0],"user channel fetched successfully")
+    )
+
+})
+
+
+const getWatchHistroy = asyncHandler(async (req,res)=>{
+    //in mongoDB we get id object in string form . As we are using mongoose it convert ._id to mongoDB id .
+    // in aggregation direct mongodb operations are there not mongoose
+    const user = await User.aggregate([
+        {
+            $match:{ // here we have to form object id of mongoose
+                _id:new mongoose.Types.ObjectId(req.user._id) 
+            }
+        },
+        {
+            $lookup:{
+                from:"videos",
+                localField:"watchHistory",
+                foreignField:"_id",
+                as:"watchHistory", // now we need to add more pipeline in it because videos also contains a user
+                pipeline:[
+                    {
+                        $lookup:{
+                            from:"users",
+                            localField:"owner",
+                            foreignField:"_id",
+                            as:"owner" , // now in owner document we get all details of user but we don't watch that much
+                            pipeline:[
+                                {
+                                    $project:{
+                                        fullName:1,
+                                        username:1,
+                                        avatar:1
+                                    }
+                                }
+                            ]
+                        }
+                    },// frontend get owner which contains array in that array the first position contains data(usrname,fullname,avatar)
+                    //we can use another pipeline to get first value 
+                    {
+                        $addFields:{
+                            owner:{
+                                $first:"owner"
+                            }// now he get direct values 
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+    return res.status(200).json(
+        new APIresponse(200,user[0].getWatchHistoryy,"watch history fetched successfully")
+    )
+})
+
 export {registerUser,loginUser,logoutUser,refreshAccessToken,
     changeCurrentPassword,getCurrentUser,
-updateAccountDetails,updateUserAvatar,updateUserCoverImage}
+updateAccountDetails,updateUserAvatar,updateUserCoverImage,
+getUserChannelProfile,getWatchHistroy}
