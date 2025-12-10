@@ -283,7 +283,7 @@ const updateUserCoverImage = asyncHandler( async (req,res)=>{
 
 
 const getUserChannelProfile = asyncHandler(async (req,res)=>{
-    const username = req.params // where params is from url
+    const { username } = req.params // where params is from url
     if(!username?.trim()) {
         throw new APIerror(400,"username is missing ")
     }
@@ -391,7 +391,7 @@ const getWatchHistroy = asyncHandler(async (req,res)=>{
                     {
                         $addFields:{
                             owner:{
-                                $first:"owner"
+                                $first:"$owner"
                             }// now he get direct values 
                         }
                     }

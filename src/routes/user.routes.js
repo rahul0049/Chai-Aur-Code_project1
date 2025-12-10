@@ -26,7 +26,7 @@ router.route("/change-password").post(verifyJWT,changeCurrentPassword) // middle
 router.route("/current-user").get(verifyJWT,getCurrentUser)
 router.route("/update-details").patch(verifyJWT,updateAccountDetails) // if we use post then all details get updates so use patch
 router.route("/avatar").patch(verifyJWT,upload.single("avatar"),updateUserAvatar)
-router.route("/coverImage").patch(verifyJWT,upload.single("/coverImage"),updateUserCoverImage)
+router.route("/coverImage").patch(verifyJWT,upload.single("coverImage"),updateUserCoverImage)
 router.route("/c/:username").get(verifyJWT,getUserChannelProfile) // this is because we are getting data from params so use c/:username
 router.route("/history").get(verifyJWT,getWatchHistroy)
 
