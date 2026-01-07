@@ -1,8 +1,8 @@
 import mongoose, { Schema } from "mongoose"
-import jwt from "jsonwebtoken" // used for token 
-import bcrypt from "bcrypt" // for encryption of password
+import jwt from "jsonwebtoken" 
+import bcrypt from "bcrypt" 
 
-//direct encryption is not possible so middlewares(hook) are used for it like Pre
+
 
 
 const userSchema = new Schema({
@@ -12,7 +12,7 @@ const userSchema = new Schema({
         unique:true,
         lowercase:true,
         trim:true,
-        index:true, // mainly for seraching in database 
+        index:true, 
     },
     email:{
         type:String,
@@ -29,7 +29,7 @@ const userSchema = new Schema({
         index:true,
     },
     avatar:{
-        type:String, // cloudinary url
+        type:String, 
         required:true,
 
 
@@ -58,14 +58,13 @@ const userSchema = new Schema({
 
 
 userSchema.pre("save", async function (){
-    if (!this.isModified("password")) return; // nothing to do
+    if (!this.isModified("password")) return; 
     this.password = await bcrypt.hash(this.password, 10);
 
-}) // types are save,update,remove,validate,deleteOne,updateOne,init
-//arrow function is not used here because they don't have context (this)
+}) 
 
 userSchema.methods.isPasswordCorrect=async function(password){
-    return await bcrypt.compare(password,this.password) // this.password is encrypted
+    return await bcrypt.compare(password,this.password) 
 }
 
 
@@ -75,26 +74,26 @@ userSchema.methods.generateAccessToken = function (){
         email:this.email,
         username:this.username,
         fullname:this.fullname
-            },//this is payload. this data is stored in form of tokens
+            },
         process.env.ACCESS_TOKEN_SECRET,
         {
             expiresIn:process.env.ACCESS_TOKEN_EXPIRY
         }
 
-)// generate the token
+)
         
 }
 
 
 userSchema.methods.generateRefreshToken = function(){
     return jwt.sign({
-        _id:this._id    }, // as it keeps on refreshing so only store id
+        _id:this._id    }, 
         process.env.ACCESS_TOKEN_SECRET,
         {
             expiresIn:process.env.ACCESS_TOKEN_EXPIRY
         }
 
-)// generate the token
+)
 }
 
 

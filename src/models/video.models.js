@@ -1,9 +1,9 @@
 import mongoose, { mongo } from "mongoose"
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 const videoSchema=new mongoose.Schema({
-    //id is already created by mongoose so no need for that 
+    
     videoFile:{
-        type:String, //from cloudinary
+        type:String, 
         required:true,
     },
     thumbnail:{
@@ -15,7 +15,7 @@ const videoSchema=new mongoose.Schema({
         required:true,
     },
     duration:{
-        type:Number, // it is also given by cloudinary (as it also send time of video)
+        type:Number, 
         required:true,
     },
     views:{
@@ -32,5 +32,5 @@ const videoSchema=new mongoose.Schema({
     }
 },{timestamps:true})
 
-videoSchema.plugin(mongooseAggregatePaginate) // mainly for watch history
+videoSchema.plugin(mongooseAggregatePaginate) 
 export const Video = mongoose.model("Video",videoSchema);

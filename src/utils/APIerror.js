@@ -1,4 +1,4 @@
-class APIerror extends Error{ // node js gives Error class for api error 
+class APIerror extends Error{ 
  constructor(
     statusCode,
     message="something went wrong",
@@ -9,7 +9,7 @@ class APIerror extends Error{ // node js gives Error class for api error
     this.statusCode=statusCode
     this.data=null
     this.message=message
-    this.success=false // as we are handling error
+    this.success=false 
     this.errors=errors
 
     if(stack){
